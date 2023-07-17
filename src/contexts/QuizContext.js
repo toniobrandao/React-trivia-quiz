@@ -96,63 +96,91 @@ function QuizProvider({ children }) {
   );
   const numQuestions = questions.length;
 
-  const changeApiJson = function (questionList) {
-    return questionList.map((question) => {
-      const {
-        question: rawQuestion,
-        correct_answer: rawCorrectAnswer,
-        incorrect_answers: rawIncorrectAnswers,
-        difficulty,
-        ...rest
-      } = question;
+  useEffect(() => {
+    const changeApiJson = function (questionList) {
+      return questionList.map((question) => {
+        const {
+          question: rawQuestion,
+          correct_answer: rawCorrectAnswer,
+          incorrect_answers: rawIncorrectAnswers,
+          difficulty,
+          ...rest
+        } = question;
 
-      const formattedQuestion = formatString(rawQuestion);
-      const formattedCorrectAnswer = formatString(rawCorrectAnswer);
-      const formattedIncorrectAnswers = rawIncorrectAnswers.map(formatString);
+        const formattedQuestion = formatString(rawQuestion);
+        const formattedCorrectAnswer = formatString(rawCorrectAnswer);
+        const formattedIncorrectAnswers = rawIncorrectAnswers.map(formatString);
 
-      const options = [formattedCorrectAnswer, ...formattedIncorrectAnswers];
-      const correctOption = options.indexOf(formattedCorrectAnswer);
+        const options = [formattedCorrectAnswer, ...formattedIncorrectAnswers];
+        const correctOption = options.indexOf(formattedCorrectAnswer);
 
-      let points = 0;
-      if (difficulty === "easy") {
-        points = 5;
-      } else if (difficulty === "medium") {
-        points = 10;
-      } else if (difficulty === "hard") {
-        points = 20;
-      }
+        let points = 0;
+        if (difficulty === "easy") {
+          points = 5;
+        } else if (difficulty === "medium") {
+          points = 10;
+        } else if (difficulty === "hard") {
+          points = 20;
+        }
 
-      return {
-        ...rest,
-        question: formattedQuestion,
-        options,
-        correctOption,
-        points,
+        return {
+          ...rest,
+          question: formattedQuestion,
+          options,
+          correctOption,
+          points,
+        };
+      });
+    };
+
+    function formatString(str) {
+      const entities = {
+        "&aacute;": "á",
+        "&eacute;": "é",
+        "&iacute;": "í",
+        "&oacute;": "ó",
+        "&uacute;": "ú",
+        "&ntilde;": "ñ",
+        "&uuml;": "ü",
+        "&agrave;": "à",
+        "&egrave;": "è",
+        "&igrave;": "ì",
+        "&ograve;": "ò",
+        "&ugrave;": "ù",
+        "&acirc;": "â",
+        "&ecirc;": "ê",
+        "&icirc;": "î",
+        "&ocirc;": "ô",
+        "&ucirc;": "û",
+        "&euml;": "ë",
+        "&iuml;": "ï",
+        "&ouml;": "ö",
+        "&ccedil;": "ç",
+        "&yuml;": "ÿ",
+        "&#039;": "'",
+        "&quot;": '"',
       };
-    });
-  };
-  function formatString(str) {
-    return str.replace(/&quot;/g, '"').replace(/&#039;/g, "'");
-  }
 
-  useEffect(
-    function () {
-      fetch(
-        `https://opentdb.com/api.php?amount=10&${
-          selectedCategory === "any" ? "" : `category=${selectedCategory}&`
-        }type=multiple`
+      return str.replace(
+        /&(amp|lt|gt|quot|apos|#[0-9]+|quot);/g,
+        (match) => entities[match]
+      );
+    }
+
+    fetch(
+      `https://opentdb.com/api.php?amount=10&${
+        selectedCategory === "any" ? "" : `category=${selectedCategory}&`
+      }type=multiple`
+    )
+      .then((res) => res.json())
+      .then((data) =>
+        dispatch({
+          type: "dataReceived",
+          payload: changeApiJson(data["results"]),
+        })
       )
-        .then((res) => res.json())
-        .then((data) =>
-          dispatch({
-            type: "dataReceived",
-            payload: changeApiJson(data["results"]),
-          })
-        )
-        .catch((err) => dispatch({ type: "dataFailed" }));
-    },
-    [selectedCategory]
-  );
+      .catch((err) => dispatch({ type: "dataFailed" }));
+  }, [selectedCategory]);
 
   return (
     <QuizContext.Provider
