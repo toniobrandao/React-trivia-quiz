@@ -112,6 +112,8 @@ function QuizProvider({ children }) {
         const formattedIncorrectAnswers = rawIncorrectAnswers.map(formatString);
 
         const options = [formattedCorrectAnswer, ...formattedIncorrectAnswers];
+        //Sorting the answers randomly
+        options.sort(() => Math.random() - 0.5);
         const correctOption = options.indexOf(formattedCorrectAnswer);
 
         let points = 0;
